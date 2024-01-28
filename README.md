@@ -3,6 +3,9 @@
 Track your mood throughout the days with this app
 You will be able to know which days of yours were good, and which ones were straight up bad.
 
+Get from google play:
+https://play.google.com/store/apps/details?id=com.domedav.moodtracker
+
 ## 1.0.2
 • Notifications
 
