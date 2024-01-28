@@ -52,6 +52,8 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
   int _happyStreak = -1;
   bool _canRateDay = false;
 
+  bool _showYearSwitcher = false;
+
   @override
   void dispose() {
     super.dispose();
@@ -223,6 +225,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
       Mood currMood = Mood(0, DateTime.fromMillisecondsSinceEpoch(0), '').parseString(val);
       _moods.add(currMood);
     }
+    _showYearSwitcher = _moods[_moods.length - 1].time.year != _moods[0].time.year;
     return false;
   }
 
@@ -338,7 +341,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                         onMenuPressed: (){onMenuPressed(false);},
                         progress: _topmenuAnimation,
                       ),
-                      Container(
+                      _showYearSwitcher ? Container(
                         decoration: const BoxDecoration(
                           color: Color.fromRGBO(42, 42, 42, 1.0),
                           borderRadius: BorderRadius.all(Radius.circular(20))
@@ -388,7 +391,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                             ),
                           ],
                         ),
-                      ),
+                      ) : const SizedBox(),
                       Expanded(
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),

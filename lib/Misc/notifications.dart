@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
-
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AppNotifications{
@@ -16,6 +18,22 @@ class AppNotifications{
         defaultActionName: 'Dismiss'
       )
     ));
+  }
+
+  static tz.TZDateTime _convert(int hour, int minutes){
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduleDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minutes,
+    );
+    if (scheduleDate.isBefore(now)) {
+      scheduleDate = scheduleDate.add(const Duration(days: 1));
+    }
+    return scheduleDate;
   }
 
   static Future<void> showNotification() async{
@@ -37,7 +55,20 @@ class AppNotifications{
       ),
     );
     if(Platform.isAndroid){
-      await _localnotifs.periodicallyShow(0, title, content, RepeatInterval.daily, details, androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
+      tz.initializeTimeZones();
+      final String timeZone = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZone));
+
+      await _localnotifs.zonedSchedule(
+          0,
+          title,
+          content,
+          _convert(19, 0),
+          details,
+          androidAllowWhileIdle: true,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
     }
   }
 
