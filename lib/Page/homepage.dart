@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:moodtracker/Misc/appstorage.dart';
@@ -16,6 +17,7 @@ import 'package:moodtracker/Widget/sidemenu_element.dart';
 import 'package:moodtracker/Widget/topmenu.dart';
 import 'package:moodtracker/Misc/navigator.dart';
 import 'package:moodtracker/Misc/notifications.dart';
+import 'package:moodtracker/Misc/apptheme.dart';
 
 class HomePage extends StatefulWidget{
   const HomePage({super.key});
@@ -67,28 +69,12 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
   void initState() {
     super.initState();
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color.fromRGBO(22, 22, 22, 1.0), // navigation bar color
-      statusBarColor: Color.fromRGBO(42, 42, 42, 1.0), // status bar color
-    ));
-
     _topmenuController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _topmenuAnimation = Tween(begin: 0.0, end: 1.0).animate(_topmenuController);
 
     _topmenuController.addListener(() {
       (context as Element).markNeedsBuild();
     });
-
-    _moodsWidgets.add(const Text(
-      'No Moods Recorded Yet',
-      textAlign: TextAlign.center,
-      style: TextStyle(
-          color: Colors.white,
-          fontSize: 30,
-          fontWeight: FontWeight.w800
-      ),
-    ));
 
     Future.delayed(Duration.zero, ()async{
       await moodSetup();
@@ -112,6 +98,26 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
       setState(() {
         _happyStreak = streak.round();
       });
+    });
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      final theme = AppTheme.getCurrentTheme(context);
+
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarIconBrightness: theme.isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: theme.background, // navigation bar color
+        statusBarColor: theme.primary, // status bar color
+      ));
+
+      _moodsWidgets.add(Text(
+        'No Moods Recorded Yet',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+            color: theme.text,
+            fontSize: 30,
+            fontWeight: FontWeight.w800
+        ),
+      ));
     });
   }
 
@@ -295,6 +301,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.getCurrentTheme(context);
     return Scaffold(
       body: PopScope(
         canPop: false,
@@ -329,7 +336,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                 child: Container(
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width,
-                  color: const Color.fromRGBO(22, 22, 22, 1.0),
+                  color: theme.background,
                   padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, bottom: MediaQuery.of(context).padding.bottom),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -342,9 +349,9 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                         progress: _topmenuAnimation,
                       ),
                       _showYearSwitcher ? Container(
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(42, 42, 42, 1.0),
-                          borderRadius: BorderRadius.all(Radius.circular(20))
+                        decoration: BoxDecoration(
+                          color: theme.primary,
+                          borderRadius: const BorderRadius.all(Radius.circular(20))
                         ),
                         padding: const EdgeInsets.all(10),
                         margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
@@ -361,7 +368,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                                 icon: Icon(
                                   Icons.arrow_back_rounded,
-                                  color: _moods.isNotEmpty && _moods[_moods.length - 1].time.year < _selectedYear ? Colors.white : Colors.white.withOpacity(.4),
+                                  color: _moods.isNotEmpty && _moods[_moods.length - 1].time.year < _selectedYear ? theme.text : theme.text.withOpacity(.4),
                                   size: 30,
                                 )
                             ),
@@ -370,8 +377,8 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                               child: Text(
                                 '$_selectedYear',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: theme.text,
                                   fontSize: 22,
                                   fontWeight: FontWeight.w600
                                 ),
@@ -385,7 +392,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                                 icon: Icon(
                                   Icons.arrow_forward_rounded,
-                                  color: _moods.isNotEmpty && _moods[0].time.year > _selectedYear ? Colors.white : Colors.white.withOpacity(.4),
+                                  color: _moods.isNotEmpty && _moods[0].time.year > _selectedYear ? theme.text : theme.text.withOpacity(.4),
                                   size: 30,
                                 )
                             ),
@@ -434,9 +441,9 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                     child: Container(
                         transform: Matrix4.translationValues(-MediaQuery.of(context).size.width * (1 - _topmenuAnimation.value), 0, 0),
                         margin: EdgeInsets.only(right: MediaQuery.of(context).size.width / 3, bottom: 20 + (_topmenuGlobalkey.currentContext?.findRenderObject() != null ? (_topmenuGlobalkey.currentContext?.findRenderObject()! as RenderBox).size.height + MediaQuery.of(context).padding.top : 0)),
-                        decoration: const BoxDecoration(
-                            color: Color.fromRGBO(42, 42, 42, 1.0),
-                            borderRadius: BorderRadius.only(bottomRight: Radius.circular(40))
+                        decoration: BoxDecoration(
+                            color: theme.primary,
+                            borderRadius: const BorderRadius.only(bottomRight: Radius.circular(40))
                         ),
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -475,20 +482,20 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                     child: Container(
                       margin: const EdgeInsets.all(40),
                       padding: const EdgeInsets.all(20),
-                      decoration: const BoxDecoration(
-                        color: Color.fromRGBO(42, 42, 42, 1.0),
-                        borderRadius: BorderRadius.all(Radius.circular(25))
+                      decoration: BoxDecoration(
+                        color: theme.primary,
+                        borderRadius: const BorderRadius.all(Radius.circular(25))
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             'Mood',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: theme.text,
                               fontWeight: FontWeight.w600,
                               fontSize: 20
                             ),
@@ -497,7 +504,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                             'How do you feel today?',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Colors.white.withOpacity(.4),
+                                color: theme.text.withOpacity(.4),
                                 fontWeight: FontWeight.w400,
                                 fontSize: 12
                             ),
@@ -519,10 +526,10 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                   },
                                   icon: Icon(
                                     Icons.sentiment_very_dissatisfied_rounded,
-                                    color: _selectedMood == -1 || _selectedMood == 0 ? Colors.red : Colors.red.withOpacity(.4),
+                                    color: _selectedMood == -1 || _selectedMood == 0 ? theme.moodColor_1 : theme.moodColor_1.withOpacity(.4),
                                     size: 30,
                                   ),
-                                  color: Colors.red,
+                                  color: theme.moodColor_1,
                                 ),
                                 IconButton(
                                   onPressed: (){
@@ -532,10 +539,10 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                   },
                                   icon: Icon(
                                     Icons.sentiment_dissatisfied_rounded,
-                                    color: _selectedMood == -1 || _selectedMood == 1 ? Colors.orange : Colors.orange.withOpacity(.4),
+                                    color: _selectedMood == -1 || _selectedMood == 1 ? theme.moodColor_2 : theme.moodColor_2.withOpacity(.4),
                                     size: 30,
                                   ),
-                                  color: Colors.orange,
+                                  color: theme.moodColor_2,
                                 ),
                                 IconButton(
                                   onPressed: (){
@@ -545,10 +552,10 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                   },
                                   icon: Icon(
                                     Icons.sentiment_neutral_rounded,
-                                    color: _selectedMood == -1 || _selectedMood == 2 ? Colors.yellow : Colors.yellow.withOpacity(.4),
+                                    color: _selectedMood == -1 || _selectedMood == 2 ? theme.moodColor_3 : theme.moodColor_3.withOpacity(.4),
                                     size: 30,
                                   ),
-                                  color: Colors.yellow,
+                                  color: theme.moodColor_3,
                                 ),
                                 IconButton(
                                   onPressed: (){
@@ -558,10 +565,10 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                   },
                                   icon: Icon(
                                     Icons.sentiment_satisfied_rounded,
-                                    color: _selectedMood == -1 || _selectedMood == 3 ? Colors.greenAccent : Colors.greenAccent.withOpacity(.4),
+                                    color: _selectedMood == -1 || _selectedMood == 3 ? theme.moodColor_4 : theme.moodColor_4.withOpacity(.4),
                                     size: 30,
                                   ),
-                                  color: Colors.greenAccent,
+                                  color: theme.moodColor_4,
                                 ),
                                 IconButton(
                                   onPressed: (){
@@ -571,10 +578,10 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                   },
                                   icon: Icon(
                                     Icons.sentiment_very_satisfied_rounded,
-                                    color: _selectedMood == -1 || _selectedMood == 4 ? Colors.green : Colors.green.withOpacity(.4),
+                                    color: _selectedMood == -1 || _selectedMood == 4 ? theme.moodColor_5 :theme.moodColor_5.withOpacity(.4),
                                     size: 30,
                                   ),
-                                  color: Colors.green,
+                                  color: theme.moodColor_5,
                                 ),
                               ],
                             ),
@@ -585,11 +592,14 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                             maxLength: 200,
                             maxLines: 3,
                             keyboardType: TextInputType.text,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Comment the day...',
+                              hintStyle: TextStyle(
+                                color: theme.text.withOpacity(.6)
+                              ),
                             ),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: theme.text,
                               fontSize: 14,
                               fontWeight: FontWeight.w300
                             ),
@@ -613,14 +623,14 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                 children: [
                                   Icon(
                                     Icons.check_rounded,
-                                    color: Colors.white.withOpacity(_selectedMood == -1 ? .4 : 1),
+                                    color: theme.text.withOpacity(_selectedMood == -1 ? .4 : 1),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Done',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(_selectedMood == -1 ? .4 : 1),
+                                      color: theme.text.withOpacity(_selectedMood == -1 ? .4 : 1),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                     ),

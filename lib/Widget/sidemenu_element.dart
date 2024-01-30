@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../Misc/apptheme.dart';
+
 class SidemenuElement extends StatelessWidget{
   final String text;
   final IconData icon;
@@ -9,6 +11,7 @@ class SidemenuElement extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.getCurrentTheme(context);
     return TextButton(
       onPressed: onPress,
       child: Container(
@@ -23,7 +26,7 @@ class SidemenuElement extends StatelessWidget{
               flex: 1,
               child: Icon(
                 icon,
-                color: onPress == null ? Colors.white.withOpacity(.4) : Colors.white,
+                color: onPress == null ? theme.text.withOpacity(.4) : theme.text,
                 size: 20,
               ),
             ),
@@ -32,7 +35,7 @@ class SidemenuElement extends StatelessWidget{
               child: Text(
                 text,
                 style: TextStyle(
-                  color: onPress == null ? Colors.white.withOpacity(.4) : Colors.white,
+                  color: onPress == null ? theme.text.withOpacity(.4) : theme.text,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

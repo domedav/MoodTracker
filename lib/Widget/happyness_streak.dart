@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:moodtracker/Misc/emojirich_text.dart';
+import 'package:moodtracker/Misc/apptheme.dart';
 
 class HappyStreakWidget extends StatelessWidget{
   final int happyStreak;
@@ -7,6 +8,7 @@ class HappyStreakWidget extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.getCurrentTheme(context);
     return Container(
       padding: const EdgeInsets.all(7),
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -20,13 +22,13 @@ class HappyStreakWidget extends StatelessWidget{
             child: Center(
               child: EmojiRichText(
                 text: '🔥 Happiness Streak: $happyStreak days 🔥',
-                defaultStyle: const TextStyle(
-                  color: Color.fromRGBO(0xBF, 0xA4, 0x8A, 1.0),
+                defaultStyle: TextStyle(
+                  color: theme.secondary,
                   fontWeight: FontWeight.w600,
                   fontSize: 12.0,
                 ),
-                emojiStyle: const TextStyle(
-                    color: Color.fromRGBO(0xBF, 0xA4, 0x8A, 1.0),
+                emojiStyle: TextStyle(
+                    color: theme.secondary,
                     fontSize: 14.0,
                     fontFamily: "Noto Color Emoji"
                 ),

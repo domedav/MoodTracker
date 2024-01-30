@@ -11,8 +11,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
     return MaterialApp(
-      theme: ThemeData.dark(useMaterial3: true),
+      theme: isDark ? ThemeData.dark(useMaterial3: true) : ThemeData.light(useMaterial3: true),
       home: const HomePage()
     );
   }
