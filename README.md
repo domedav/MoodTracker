@@ -6,6 +6,9 @@ You will be able to know which days of yours were good, and which ones were stra
 Get from google play:
 https://play.google.com/store/apps/details?id=com.domedav.moodtracker
 
+## 1.1.0
+Themes!!!
+
 ## 1.0.2
 • Notifications
 
