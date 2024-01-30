@@ -1,4 +1,5 @@
 import 'dart:developer' as debug;
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
@@ -25,7 +26,7 @@ class HomePage extends StatefulWidget{
   State<StatefulWidget> createState() => _HomePage();
 }
 
-class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
+class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin, WidgetsBindingObserver{
 
   static const double topmenuCallerSensitivity = 100;
   static const bool needsDevControls = false;
@@ -46,6 +47,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
   double _dragXelapsed = 0;
 
   bool _showMoodPopup = false;
+  bool _showThemePopup = false;
   int _selectedMood = -1;
   final TextEditingController _moodPopupController = TextEditingController();
 
@@ -68,6 +70,39 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
   @override
   void initState() {
     super.initState();
+
+    Future.delayed(Duration.zero, ()async{
+      final flag = await NumberStorage.hasKey('ThemeKey');
+      if(!flag){
+        NumberStorage.setData('ThemeKey', 0);
+        return;
+      }
+      final themeKey = await NumberStorage.getData('ThemeKey');
+      AppTheme.themingKey = themeKey.round();
+      setState(() {
+        _themesDropdownValue = themeKey.round();
+      });
+    }).whenComplete((){
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        final theme = AppTheme.getCurrentTheme(context);
+
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+        applyThemesToSystemUI();
+
+        if(_moodsWidgets.isEmpty) {
+          _moodsWidgets.add(Text(
+            'No Moods Recorded Yet',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: theme.text,
+                fontSize: 30,
+                fontWeight: FontWeight.w800
+            ),
+          ));
+        }
+      });
+    });
 
     _topmenuController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _topmenuAnimation = Tween(begin: 0.0, end: 1.0).animate(_topmenuController);
@@ -99,26 +134,29 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
         _happyStreak = streak.round();
       });
     });
+  }
 
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      final theme = AppTheme.getCurrentTheme(context);
+  bool _hasLeft = false;
 
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarIconBrightness: theme.isDark ? Brightness.light : Brightness.dark,
-        systemNavigationBarColor: theme.background, // navigation bar color
-        statusBarColor: theme.primary, // status bar color
-      ));
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state){
+    if(state != AppLifecycleState.resumed && !_hasLeft){
+      if(state == AppLifecycleState.paused) {
+        _hasLeft = true;
+      }
+      return;
+    }
+    _hasLeft = false;
+    applyThemesToSystemUI();
+  }
 
-      _moodsWidgets.add(Text(
-        'No Moods Recorded Yet',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-            color: theme.text,
-            fontSize: 30,
-            fontWeight: FontWeight.w800
-        ),
-      ));
-    });
+  void applyThemesToSystemUI(){
+    final theme = AppTheme.getCurrentTheme(context);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarIconBrightness: theme.isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: theme.background, // navigation bar color
+      statusBarColor: theme.primary, // status bar color
+    ));
   }
 
   Future<void> moodSetup()async{
@@ -218,6 +256,47 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
     });
   }
 
+  void showThemePopup(){
+    if(_topmenuState){
+      AppNavigator.pop();
+    }
+
+    AppNavigator.push(1, () {
+      setState(() {
+        _showThemePopup = false;
+      });
+    });
+
+    setState(() {
+      _showThemePopup = true;
+    });
+  }
+
+  DropdownMenuItem<int> _generateOneDropdownMenuItem(String text, ThemeContainer theme, int value){
+    return DropdownMenuItem(
+      value: value,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+            color: theme.text,
+            fontSize: 14,
+            fontWeight: FontWeight.w400
+        ),
+      ),
+    );
+  }
+
+  static const _themesDropdownText = [
+    'System (default)',
+    'Dark',
+    'Light',
+    'Vampire',
+    'Pink',
+    'Treasure Map'
+  ];
+  int _themesDropdownValue = 0;
+
   Future<bool> setupMoods() async{
     _moods = <Mood>[].toList();
     if(!await NumberStorage.hasKey('hasMoods')){
@@ -273,6 +352,9 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
         break;
       case 1:
         showMoodPopup();
+        break;
+      case 2:
+        showThemePopup();
         break;
       case 99:
         StorageHelper.clearData();
@@ -337,7 +419,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width,
                   color: theme.background,
-                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, bottom: MediaQuery.of(context).padding.bottom),
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -454,6 +536,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                                 onPress: _canExportImage ? (){onSidemenuButtonPressed(0);} : null
                             ),
                             _canRateDay ? SidemenuElement(text: 'Rate Day', icon: Icons.mood_rounded, onPress: (){onSidemenuButtonPressed(1);}) : const SizedBox(),
+                            SidemenuElement(text: 'Change Theme', icon: Icons.brush_rounded, onPress: (){onSidemenuButtonPressed(2);}),
 
                             needsDevControls ? SidemenuElement(text: 'Delete Data Debug Option', icon: Icons.delete_forever_rounded, onPress: (){onSidemenuButtonPressed(99);}) : const SizedBox(),
                             needsDevControls ? SidemenuElement(text: 'Create Random Data Debug Option', icon: Icons.create_new_folder_rounded, onPress: (){onSidemenuButtonPressed(100);}) : const SizedBox(),
@@ -483,8 +566,8 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                       margin: const EdgeInsets.all(40),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: theme.primary,
-                        borderRadius: const BorderRadius.all(Radius.circular(25))
+                          color: theme.primary,
+                          borderRadius: const BorderRadius.all(Radius.circular(25))
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -495,9 +578,9 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                             'Mood',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: theme.text,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 20
+                                color: theme.text,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20
                             ),
                           ),
                           Text(
@@ -595,13 +678,13 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                             decoration: InputDecoration(
                               hintText: 'Comment the day...',
                               hintStyle: TextStyle(
-                                color: theme.text.withOpacity(.6)
+                                  color: theme.text.withOpacity(.6)
                               ),
                             ),
                             style: TextStyle(
-                              color: theme.text,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w300
+                                color: theme.text,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w300
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -644,7 +727,120 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin{
                     ),
                   ),
                 ),
+              ),
+            ) : const SizedBox(),
+            _showThemePopup ? GestureDetector(
+              onTap: (){
+                setState(() {
+                  AppNavigator.pop();
+                });
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                color: Colors.black.withOpacity(0.4),
+                child: Center(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Container(
+                      margin: const EdgeInsets.all(40),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                          color: theme.primary,
+                          borderRadius: const BorderRadius.all(Radius.circular(25))
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Themes',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: theme.text,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20
+                            ),
+                          ),
+                          Text(
+                            'Select a theme, which matches your mood.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: theme.text.withOpacity(.4),
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          DropdownButton<int>(
+                            value: _themesDropdownValue,
+                            items: [0, 1, 2, 3, 4, 5].map((val) => _generateOneDropdownMenuItem(_themesDropdownText[val], theme, val)).toList(),
+                            onChanged: (selected){
+                              setState(() {
+                                _themesDropdownValue = selected!;
+                                NumberStorage.setData('ThemeKey', selected + 0.0);
+                              });
+                            },
+                            enableFeedback: true,
+                            focusColor: theme.text,
+                            borderRadius: const BorderRadius.all(Radius.circular(20)),
+                            dropdownColor: theme.primary,
+                            style: TextStyle(
+                              color: theme.text,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16
+                            ),
+                            underline: Container(
+                              color: theme.text.withOpacity(.3),
+                              height: 1,
+                            ),
+                            icon: Icon(
+                              Icons.arrow_drop_down_rounded,
+                              color: theme.text.withOpacity(.4),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          TextButton(
+                            onPressed:(){
+                              setState(() {
+                                AppNavigator.clear();
+                                //Navigator.popUntil(context, (route) => route.willHandlePopInternally);
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage()));
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(7),
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Icon(
+                                    Icons.check_rounded,
+                                    color: theme.text.withOpacity(1),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Done',
+                                    style: TextStyle(
+                                      color: theme.text.withOpacity(1),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
+              ),
             ) : const SizedBox(),
           ],
         ),

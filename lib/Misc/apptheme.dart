@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme{
+  static int themingKey = 0;
   static const ThemeContainer darkTheme = ThemeContainer(
       background: Color.fromRGBO(22, 22, 22, 1.0),
       text: Colors.white,
@@ -27,13 +28,64 @@ class AppTheme{
       isDark: false
   );
 
-  static ThemeContainer getCurrentTheme(BuildContext context){
-    final isDarkTheme = MediaQuery.of(context).platformBrightness == Brightness.dark;
+  static const ThemeContainer vampireTheme = ThemeContainer(
+    background: Color.fromRGBO(10, 10, 10, 1.0),
+    text: Color.fromRGBO(228, 228, 228, 1.0),
+    primary: Color.fromRGBO(22, 22, 22, 1.0),
+    secondary: Color.fromRGBO(0x87, 0x74, 0x61, 1.0),
+    moodColor_1: Color.fromRGBO(211, 158, 158, 1.0),
+    moodColor_2: Color.fromRGBO(213, 182, 153, 1.0),
+    moodColor_3: Color.fromRGBO(224, 212, 169, 1.0),
+    moodColor_4: Color.fromRGBO(161, 213, 191, 1.0),
+    moodColor_5: Color.fromRGBO(183, 217, 173, 1.0),
+    isDark: true,
+  );
 
-    if(isDarkTheme){
-      return darkTheme;
+  static const ThemeContainer pinkTheme = ThemeContainer(
+      background: Color.fromRGBO(0xE1, 0xCC, 0xF5, 1.0),
+      text: Color.fromRGBO(48, 0, 42, 1.0),
+      primary: Color.fromRGBO(0xD4, 0xB4, 0xEB, 1.0),
+      secondary: Color.fromRGBO(0x57, 0x0, 0x4E, 1.0),
+      moodColor_1: Color.fromRGBO(0x90, 0x1D, 0x4C, 1.0),
+      moodColor_2: Color.fromRGBO(0x8C, 0x1F, 0x74, 1.0),
+      moodColor_3: Color.fromRGBO(0x6B, 0x18, 0x86, 1.0),
+      moodColor_4: Color.fromRGBO(0x4D, 0x22, 0x80, 1.0),
+      moodColor_5: Color.fromRGBO(0x37, 0x27, 0x86, 1.0),
+      isDark: false
+  );
+
+  static const ThemeContainer treasuremapTheme = ThemeContainer(
+      background: Color.fromRGBO(0xF5, 0xDC, 0xC5, 1.0),
+      text: Color.fromRGBO(59, 42, 42, 1.0),
+      primary: Color.fromRGBO(0xEB, 0xC8, 0xAD, 1.0),
+      secondary: Color.fromRGBO(0x3A, 0x3A, 0x3A, 1.0),
+      moodColor_1: Color.fromRGBO(156, 74, 74, 1.0),
+      moodColor_2: Color.fromRGBO(164, 65, 65, 1.0),
+      moodColor_3: Color.fromRGBO(161, 42, 42, 1.0),
+      moodColor_4: Color.fromRGBO(165, 23, 23, 1.0),
+      moodColor_5: Color.fromRGBO(155, 1, 1, 1.0),
+      isDark: false
+  );
+
+  static ThemeContainer getCurrentTheme(BuildContext context){
+    switch (themingKey){
+      case 1:
+        return darkTheme;
+      case 2:
+        return lightTheme;
+      case 3:
+        return vampireTheme;
+      case 4:
+        return pinkTheme;
+      case 5:
+        return treasuremapTheme;
+      default: // use system default
+        final isDarkTheme = MediaQuery.of(context).platformBrightness == Brightness.dark;
+        if (isDarkTheme) {
+          return darkTheme;
+        }
+        return lightTheme;
     }
-    return lightTheme;
   }
 }
 

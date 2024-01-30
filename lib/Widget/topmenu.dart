@@ -21,21 +21,24 @@ class TopMenu extends StatelessWidget{
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            ElevatedButton(
-                onPressed: onMenuPressed,
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                  foregroundColor: MaterialStateProperty.all(Colors.transparent),
-                  shadowColor: MaterialStateProperty.all(Colors.transparent),
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
-                  surfaceTintColor: MaterialStateProperty.all(Colors.transparent)
-                ),
-                child: AnimatedIcon(
-                  color: theme.text,
-                  size: 30,
-                  icon: AnimatedIcons.menu_close,
-                  progress: progress,
-                )
+            Container(
+              margin: EdgeInsets.only(left: MediaQuery.of(context).padding.left + 10, right: MediaQuery.of(context).padding.right + 10),
+              child: ElevatedButton(
+                  onPressed: onMenuPressed,
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                    foregroundColor: MaterialStateProperty.all(Colors.transparent),
+                    shadowColor: MaterialStateProperty.all(Colors.transparent),
+                    overlayColor: MaterialStateProperty.all(Colors.transparent),
+                    surfaceTintColor: MaterialStateProperty.all(Colors.transparent)
+                  ),
+                  child: AnimatedIcon(
+                    color: theme.text,
+                    size: 30,
+                    icon: AnimatedIcons.menu_close,
+                    progress: progress,
+                  )
+              ),
             )
           ],
         ),

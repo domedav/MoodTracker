@@ -45,6 +45,11 @@ class AppNavigator{
     //log('push');
     //log(_state.toString());
   }
+
+  static void clear(){
+    _state.clear();
+    _state.add(const NavigationHelper(0,null));
+  }
 }
 
 class NavigationHelper{
